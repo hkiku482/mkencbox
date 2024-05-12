@@ -3,9 +3,9 @@
 ITER=600000
 mkdir -p test/output
 
-cargo run -- enc test/kfile.jpg test/text.txt test/output/enc
-cargo run -- dec test/kfile.jpg test/output/enc test/output/dec
-if [ $(md5sum test/text.txt | awk '{print $1}') = $(md5sum test/output/dec | awk '{print $1}') ]; then
+cargo run -- enc test/kfile.jpg test/text.txt test/output/enc1
+cargo run -- dec test/kfile.jpg test/output/enc1 test/output/dec1
+if [ $(md5sum test/text.txt | awk '{print $1}') = $(md5sum test/output/dec1 | awk '{print $1}') ]; then
     echo 'general: ok';
 else
     echo 'general: fail';
@@ -33,4 +33,12 @@ if [ $(md5sum test/text.txt | awk '{print $1}') = $(md5sum test/output/dec4 | aw
     echo 'dec as openssl: ok';
 else
     echo 'dec as openssl: fail';
+fi
+
+cargo run -- enc test/kfile.jpg test/dir_a test/output/dir_a.enc
+cargo run -- dec test/kfile.jpg test/output/dir_a.enc test/output/dir_a
+if [ $(md5sum test/dir_a/inner/c.txt | awk '{print $1}') = $(md5sum test/output/dir_a/inner/c.txt | awk '{print $1}') ]; then
+    echo 'directory entries: ok';
+else
+    echo 'directory entries: fail';
 fi

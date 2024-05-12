@@ -1,13 +1,13 @@
 use std::{
-    fs::File,
-    io::{Error, Read},
+    fs::{read, File},
+    io::{Error, Read, Write},
     path::PathBuf,
 };
 
 use rand::{thread_rng, Rng};
 
 use self::{
-    compression::decompression,
+    compression::decompression_or_create,
     crypto::gen_key,
     process::{decrypt, encrypt},
 };
@@ -24,10 +24,18 @@ pub fn enc(
     output: &PathBuf,
     salt: Option<&Vec<u8>>,
 ) -> Result<(), Error> {
-    let mut target = input.clone();
+    if output.exists() {
+        return Err(Error::new(
+            std::io::ErrorKind::AlreadyExists,
+            format!("{:?} already exists", output),
+        ));
+    }
+
+    let data: Vec<u8>;
     if input.is_dir() {
-        target.set_extension("tar.gz");
-        compression::compression(input, &target).unwrap();
+        data = compression::compression_dir(input).unwrap();
+    } else {
+        data = read(input.clone()).unwrap();
     }
 
     let password = crypto::passphrase_from_kfile(kfile);
@@ -63,7 +71,9 @@ pub fn enc(
         }
     };
     let (key, iv) = gen_key(&password, &salt, ITER);
-    encrypt(&key, &iv, &target, output, embedded_salt).unwrap();
+    let encrypted = encrypt(&key, &iv, &data, embedded_salt).unwrap();
+    let mut f = File::create(output).unwrap();
+    f.write_all(&encrypted).unwrap();
 
     Ok(())
 }
@@ -74,6 +84,13 @@ pub fn dec(
     output: &PathBuf,
     salt: Option<&Vec<u8>>,
 ) -> Result<(), Error> {
+    if output.exists() {
+        return Err(Error::new(
+            std::io::ErrorKind::AlreadyExists,
+            format!("{:?} already exists", output),
+        ));
+    }
+
     let password = crypto::passphrase_from_kfile(kfile);
     let salt = match salt {
         Some(s) => Vec::from(s.as_slice()),
@@ -86,19 +103,9 @@ pub fn dec(
         }
     };
     let (key, iv) = gen_key(&password, &salt, ITER);
-    decrypt(&key, &iv, input, output).unwrap();
+    let encrypted = read(input).unwrap();
+    let decrypted = decrypt(&key, &iv, &encrypted).unwrap();
 
-    if output.try_exists().unwrap() {
-        let output_name = output.clone();
-        let filename = output_name.file_name().unwrap().to_str().unwrap();
-        if filename.contains(".tar.gz") {
-            let p = output.parent().unwrap();
-            let mut p = p.to_path_buf();
-            if let Some(index) = filename.rfind(".tar.gz") {
-                p.push(filename[..index].to_string());
-            }
-            decompression(&output, &p).unwrap();
-        }
-    }
+    decompression_or_create(&decrypted, output).unwrap();
     Ok(())
 }
