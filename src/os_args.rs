@@ -46,10 +46,7 @@ impl OsArgs {
             )
             .get_matches();
 
-        let salt = match command.get_one::<String>(id_salt) {
-            Some(s) => Some(String::from(s)),
-            None => None,
-        };
+        let salt = command.get_one::<String>(id_salt).map(String::from);
 
         let process = match command.get_one::<String>(id_process) {
             Some(v) => {

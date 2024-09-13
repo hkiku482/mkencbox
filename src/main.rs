@@ -5,10 +5,7 @@ mod os_args;
 
 fn main() {
     let args = OsArgs::parse();
-    let salt = match args.salt {
-        Some(s) => Some(hex::decode(s).unwrap()),
-        None => None,
-    };
+    let salt = args.salt.map(|s| hex::decode(s).unwrap());
     if args.process == 'e' {
         mkencbox::mkencbox::enc(
             &PathBuf::from(args.key_file),

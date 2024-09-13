@@ -31,12 +31,11 @@ pub fn enc(
         ));
     }
 
-    let data: Vec<u8>;
-    if input.is_dir() {
-        data = compression::compression_dir(input).unwrap();
+    let data = if input.is_dir() {
+        compression::compression_dir(input).unwrap()
     } else {
-        data = read(input.clone()).unwrap();
-    }
+        read(input.clone()).unwrap()
+    };
 
     let password = crypto::passphrase_from_kfile(kfile);
     let user_defined_salt = salt;

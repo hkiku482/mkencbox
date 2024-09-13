@@ -7,7 +7,7 @@ pub fn passphrase_from_kfile(kfile: &PathBuf) -> String {
     let bytes = read(kfile).unwrap();
     let sha256sum = sha256::digest(&bytes);
     let md5sum = md5::compute(&bytes);
-    let mut p = String::from(sha256sum);
+    let mut p = sha256sum;
     p.push('0');
     p.push_str(&format!("{:?}", md5sum));
     p

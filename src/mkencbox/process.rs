@@ -13,14 +13,14 @@ pub fn encrypt(
 
     let cipher = cbc::Encryptor::<aes::Aes256>::new(key.into(), iv.into());
     let enc = cipher
-        .encrypt_padded_b2b_mut::<Pkcs7>(&source, &mut output_buf)
+        .encrypt_padded_b2b_mut::<Pkcs7>(source, &mut output_buf)
         .unwrap();
 
     if let Some(s) = salt {
-        out_buff.write("Salted__".as_bytes()).unwrap();
-        out_buff.write(s).unwrap();
+        let _ = out_buff.write("Salted__".as_bytes());
+        let _ = out_buff.write(s);
     }
-    out_buff.write(enc).unwrap();
+    let _ = out_buff.write(enc);
 
     Ok(out_buff)
 }
@@ -29,22 +29,19 @@ pub fn decrypt(key: &[u8; 32], iv: &[u8; 16], source: &[u8]) -> Result<Vec<u8>, 
     let mut out_buff = Vec::<u8>::new();
     let mut output_buf = vec![0; source.len() + 512].into_boxed_slice();
 
-    let head = match std::str::from_utf8(&source[0..8]) {
-        Ok(s) => s,
-        Err(_) => "",
-    };
+    let head = std::str::from_utf8(&source[0..8]).unwrap_or("");
 
     let cipher = cbc::Decryptor::<aes::Aes256>::new(key.into(), iv.into());
     if head == "Salted__" {
         let plain = cipher
             .decrypt_padded_b2b_mut::<Pkcs7>(&source[16..], &mut output_buf)
             .unwrap();
-        out_buff.write(plain).unwrap();
+        let _ = out_buff.write(plain).unwrap();
     } else {
         let plain = cipher
-            .decrypt_padded_b2b_mut::<Pkcs7>(&source, &mut output_buf)
+            .decrypt_padded_b2b_mut::<Pkcs7>(source, &mut output_buf)
             .unwrap();
-        out_buff.write(plain).unwrap();
+        let _ = out_buff.write(plain).unwrap();
     }
 
     Ok(out_buff)
@@ -65,7 +62,7 @@ mod test {
         let bytes = read(target).unwrap();
         let mut out = env::current_dir().unwrap();
         out.push("test/text.enc");
-        encrypt(&key, &iv, &bytes, Some(salt.as_slice().try_into().unwrap())).unwrap();
+        encrypt(&key, &iv, &bytes, Some(salt.as_slice())).unwrap();
     }
 
     #[test]
