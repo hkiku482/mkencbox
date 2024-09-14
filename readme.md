@@ -1,5 +1,21 @@
 ## mkencbox
 
+### Usage
+
+```
+Usage: mkencbox [OPTIONS] <PROCESS> <KEY_FILE> <INPUT> [OUTPUT]
+
+Arguments:
+  <PROCESS>   execution [possible values: enc, dec]
+  <KEY_FILE>  Key file path
+  <INPUT>     Input name
+  [OUTPUT]    Output name
+
+Options:
+  -s, --salt <SALT>  Salt
+  -h, --help         Print help
+```
+
 ### The following 2 have the same behavior.
 
 ```
