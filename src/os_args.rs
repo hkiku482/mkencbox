@@ -1,79 +1,94 @@
 use clap::{Arg, Command};
-use std::process::exit;
+use mkencbox::process::Target;
+use std::{path::PathBuf, process::exit};
 
+#[derive(Debug)]
 pub struct OsArgs {
     pub salt: Option<String>,
-    pub process: char,
-    pub key_file: String,
-    pub input_file: String,
-    pub output_file: String,
+    pub process: Target,
+    pub key_file: PathBuf,
+    pub input: PathBuf,
+    pub output: PathBuf,
 }
 
 const APP_NAME: &str = "mkencbox";
 
 impl OsArgs {
     pub fn parse() -> Self {
-        let id_salt = "SALT";
-        let id_process = "PROCESS";
-        let id_key_file = "KEY_FILE";
-        let id_input = "INPUT";
-        let id_output_file = "OUTPUT_FILE";
+        const ID_SALT: &str = "SALT";
+        const ID_PROCESS: &str = "PROCESS";
+        const ID_KEY_FILE: &str = "KEY_FILE";
+        const ID_INFILE: &str = "INPUT";
+        const ID_OUTFILE: &str = "OUTPUT";
 
         let command = Command::new(APP_NAME)
             .arg(
-                Arg::new(id_salt)
-                    .help("Salt if you use.")
+                Arg::new(ID_SALT)
+                    .help("Salt")
                     .required(false)
                     .long("salt")
                     .short('s'),
             )
             .arg(
-                Arg::new(id_process)
-                    .help("Encryption or decryption.")
+                Arg::new(ID_PROCESS)
+                    .help("execution")
                     .required(true)
                     .value_parser(["enc", "dec"]),
             )
-            .arg(Arg::new(id_key_file).help("Key file path.").required(true))
-            .arg(
-                Arg::new(id_input)
-                    .help("File (include encrypted) or directory. Directory is compressed with .tar.gz.")
-                    .required(true),
-            )
-            .arg(
-                Arg::new(id_output_file)
-                    .help("Output file name. Decompress the output when .tar.gz is specified as the extension.")
-                    .required(true),
-            )
+            .arg(Arg::new(ID_KEY_FILE).help("Key file path").required(true))
+            .arg(Arg::new(ID_INFILE).help("Input name").required(true))
+            .arg(Arg::new(ID_OUTFILE).help("Output name"))
             .get_matches();
 
-        let salt = match command.get_one::<String>(id_salt) {
-            Some(s) => Some(String::from(s)),
-            None => None,
-        };
+        let salt = command.get_one::<String>(ID_SALT).map(String::from);
 
-        let process = match command.get_one::<String>(id_process) {
-            Some(v) => {
-                if v == "enc" {
-                    'e'
-                } else if v == "dec" {
-                    'd'
-                } else {
-                    exit(1)
+        let process = match command.get_one::<String>(ID_PROCESS) {
+            Some(v) => match v.as_str() {
+                "enc" => Target::Enc,
+                "dec" => Target::Dec,
+                _ => {
+                    exit(1);
                 }
-            }
+            },
             None => exit(1),
         };
 
-        let key_file = command.get_one::<String>(id_key_file).unwrap();
-        let input_file = command.get_one::<String>(id_input).unwrap();
-        let output_file = command.get_one::<String>(id_output_file).unwrap();
+        let key_file = command.get_one::<String>(ID_KEY_FILE).unwrap();
+        let input_file = PathBuf::from(command.get_one::<String>(ID_INFILE).unwrap());
+        let output_file = match command.get_one::<String>(ID_OUTFILE) {
+            Some(s) => PathBuf::from(s.clone()),
+            None => match process {
+                Target::Enc => {
+                    let mut s = input_file.clone();
+                    let mut path_str = s.to_str().unwrap().to_string();
+                    path_str.push_str(".enc");
+                    s = PathBuf::from(path_str);
+                    s
+                }
+                Target::Dec => {
+                    let mut s = input_file.clone();
+                    match s.extension() {
+                        Some(_) => {
+                            let mut parent = s.parent().unwrap().to_path_buf();
+                            let s = s.file_stem().unwrap();
+                            parent.push(s);
+                            parent
+                        }
+                        None => {
+                            s.set_extension("dec");
+                            s
+                        }
+                    }
+                }
+            },
+        };
 
         OsArgs {
             salt,
             process,
-            key_file: String::from(key_file),
-            input_file: String::from(input_file),
-            output_file: String::from(output_file),
+            key_file: PathBuf::from(key_file),
+            input: input_file,
+            output: output_file,
         }
     }
 }

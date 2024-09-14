@@ -1,29 +1,23 @@
-use std::path::PathBuf;
+use mkencbox::{crypto::cbcpbkdf2::CbcPbkdf2, pack::targz::TarGz};
 
-use crate::os_args::OsArgs;
 mod os_args;
 
 fn main() {
-    let args = OsArgs::parse();
-    let salt = match args.salt {
-        Some(s) => Some(hex::decode(s).unwrap()),
-        None => None,
-    };
-    if args.process == 'e' {
-        mkencbox::mkencbox::enc(
-            &PathBuf::from(args.key_file),
-            &PathBuf::from(args.input_file),
-            &PathBuf::from(args.output_file),
-            salt.as_ref(),
-        )
-        .unwrap();
-    } else if args.process == 'd' {
-        mkencbox::mkencbox::dec(
-            &PathBuf::from(args.key_file),
-            &PathBuf::from(args.input_file),
-            &PathBuf::from(args.output_file),
-            salt.as_ref(),
-        )
-        .unwrap();
+    let args = os_args::OsArgs::parse();
+
+    let pack_alg = TarGz::new();
+    let crypto_alg = CbcPbkdf2::new(args.salt, args.key_file);
+    let processor = mkencbox::process::Process::new(
+        args.process,
+        Box::new(pack_alg),
+        Box::new(crypto_alg),
+        args.input,
+        args.output,
+    );
+    match processor.execute() {
+        Ok(_) => {}
+        Err(e) => {
+            panic!("{e:?}");
+        }
     }
 }
