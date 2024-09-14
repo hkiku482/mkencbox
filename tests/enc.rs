@@ -125,6 +125,7 @@ fn directory_enc_test() {
 #[test]
 fn directory_enc_salt_test() {
     let tag = "directory_enc_salt_test";
+    test_util::prepare(tag);
     let pack_alg = TarGz::new();
     let kfile = kfile();
     let crypto_alg = CbcPbkdf2::new(Some("0123456789ABCDEF".to_string()), &kfile);
