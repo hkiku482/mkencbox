@@ -42,6 +42,9 @@ fn file_enc_dec_test() {
     let e = read(&infile).unwrap();
     let a = read(&dec_out).unwrap();
     assert_eq!(e, a);
+
+    let result = processor.execute();
+    assert!(result.is_err())
 }
 
 #[test]
@@ -82,6 +85,9 @@ fn file_enc_salt_test() {
     let e = read(&infile).unwrap();
     let a = read(&dec_out).unwrap();
     assert_eq!(e, a);
+
+    let result = processor.execute();
+    assert!(result.is_err())
 }
 
 #[test]
@@ -120,6 +126,9 @@ fn directory_enc_test() {
     processor.execute().unwrap();
 
     assert_eq!(dir_entries(infile), dir_entries(dec_out));
+
+    let result = processor.execute();
+    assert!(result.is_err())
 }
 
 #[test]
@@ -154,4 +163,7 @@ fn directory_enc_salt_test() {
     processor.execute().unwrap();
 
     assert_eq!(dir_entries(infile), dir_entries(dec_out));
+
+    let result = processor.execute();
+    assert!(result.is_err())
 }

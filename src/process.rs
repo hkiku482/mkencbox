@@ -37,6 +37,13 @@ impl Process {
     }
 
     pub fn execute(&self) -> Result<(), Box<dyn std::error::Error>> {
+        if self.to_path.exists() {
+            let e = std::io::Error::new(
+                std::io::ErrorKind::AlreadyExists,
+                format!("{:?} already exists", self.to_path),
+            );
+            return Err(Box::new(e));
+        }
         match self.target {
             Target::Enc => {
                 self.enc()?;
