@@ -1,6 +1,10 @@
 use clap::{Arg, Command};
 use mkencbox::process::Target;
-use std::{path::PathBuf, process::exit};
+use std::{
+    io::{BufReader, Read},
+    path::PathBuf,
+    process::exit,
+};
 
 #[derive(Debug)]
 pub struct OsArgs {
@@ -31,9 +35,9 @@ impl OsArgs {
             )
             .arg(
                 Arg::new(ID_PROCESS)
-                    .help("execution")
+                    .help("Execution. `auto` decrypt requires salt at the beginning of the input")
                     .required(true)
-                    .value_parser(["enc", "dec"]),
+                    .value_parser(["enc", "dec", "auto"]),
             )
             .arg(Arg::new(ID_KEY_FILE).help("Key file path").required(true))
             .arg(Arg::new(ID_INFILE).help("Input name").required(true))
@@ -42,19 +46,45 @@ impl OsArgs {
 
         let salt = command.get_one::<String>(ID_SALT).map(String::from);
 
+        let input_file = PathBuf::from(command.get_one::<String>(ID_INFILE).unwrap());
         let process = match command.get_one::<String>(ID_PROCESS) {
             Some(v) => match v.as_str() {
                 "enc" => Target::Enc,
                 "dec" => Target::Dec,
+                "auto" => {
+                    if input_file.is_file() {
+                        let file = std::fs::File::open(&input_file).unwrap();
+                        let mut reader = BufReader::new(file);
+                        let mut buffer = [0u8; 8];
+                        match reader.read(&mut buffer) {
+                            Ok(read) => {
+                                if read == 8 {
+                                    let salt_str = "Salted__".as_bytes();
+                                    if buffer.to_vec() == salt_str.to_vec() {
+                                        Target::Dec
+                                    } else {
+                                        Target::Enc
+                                    }
+                                } else {
+                                    Target::Enc
+                                }
+                            }
+                            Err(_) => Target::Enc,
+                        }
+                    } else {
+                        Target::Enc
+                    }
+                }
                 _ => {
                     exit(1);
                 }
             },
-            None => exit(1),
+            None => {
+                exit(1);
+            }
         };
 
         let key_file = command.get_one::<String>(ID_KEY_FILE).unwrap();
-        let input_file = PathBuf::from(command.get_one::<String>(ID_INFILE).unwrap());
         let output_file = match command.get_one::<String>(ID_OUTFILE) {
             Some(s) => PathBuf::from(s.clone()),
             None => match process {

@@ -6,7 +6,7 @@
 Usage: mkencbox [OPTIONS] <PROCESS> <KEY_FILE> <INPUT> [OUTPUT]
 
 Arguments:
-  <PROCESS>   execution [possible values: enc, dec]
+  <PROCESS>   Execution. `auto` decrypt requires salt at the beginning of the input [possible values: enc, dec, auto]
   <KEY_FILE>  Key file path
   <INPUT>     Input name
   [OUTPUT]    Output name
