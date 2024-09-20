@@ -1,15 +1,23 @@
 use std::{
-    fs::{read, write},
+    fs::File,
+    io::{Read, Seek},
     path::PathBuf,
 };
 
-use crate::algorithm;
+use tempfile::{tempfile, NamedTempFile};
+
+use crate::algorithm::{self, AlgorithmRead, AlgorithmWrite};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Target {
     Enc,
     Dec,
 }
+
+impl AlgorithmRead for NamedTempFile {}
+impl AlgorithmWrite for NamedTempFile {}
+impl AlgorithmRead for File {}
+impl AlgorithmWrite for File {}
 
 pub struct Process {
     target: Target,
@@ -56,16 +64,28 @@ impl Process {
     }
 
     fn enc(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let packed = self.pack_algorithm.compression(&self.from_path)?;
-        let encrypted = self.crypto_algorithm.encrypt(&packed)?;
-        write(&self.to_path, encrypted)?;
+        let mut tmp = NamedTempFile::new()?;
+        let mut dst = File::create(&self.to_path)?;
+
+        self.pack_algorithm
+            .compression(self.from_path.as_path(), &mut tmp)?;
+        tmp.rewind()?;
+        self.crypto_algorithm.encrypt(&mut tmp, &mut dst)?;
         Ok(())
     }
 
     fn dec(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let encrypted = read(&self.from_path)?;
-        let packed = self.crypto_algorithm.decrypt(&encrypted)?;
-        self.pack_algorithm.decompression(&packed, &self.to_path)?;
+        let mut src = File::open(&self.from_path)?;
+        let mut tmp = tempfile()?;
+
+        let mut buf = Vec::new();
+        src.read_to_end(&mut buf)?;
+        println!("{:02X?}", buf);
+        src.rewind()?;
+
+        self.crypto_algorithm.decrypt(&mut src, &mut tmp)?;
+        tmp.rewind()?;
+        self.pack_algorithm.decompression(&mut tmp, &self.to_path)?;
         Ok(())
     }
 }

@@ -1,9 +1,10 @@
 use std::{
-    fs::{read, read_dir, remove_dir, write, File},
+    fs::{read_dir, remove_dir, File},
+    io::{copy, BufReader},
     path::Path,
 };
 
-use crate::algorithm;
+use crate::algorithm::{self, AlgorithmRead, AlgorithmWrite};
 
 pub struct TarGz;
 
@@ -20,14 +21,19 @@ impl Default for TarGz {
 }
 
 impl algorithm::Pack for TarGz {
-    fn compression(&self, in_path: &Path) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    fn compression(
+        &self,
+        in_path: &Path,
+        writer: &mut dyn AlgorithmWrite,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         if in_path.is_file() {
-            // For backwards Compatibility.
-            // Don't make *.tar.gz
-            return Ok(read(in_path)?);
+            let f = File::open(in_path)?;
+            let mut buf_reader = BufReader::new(f);
+            let _ = copy(&mut buf_reader, writer)?;
+            return Ok(());
         }
 
-        let mut tar = tar::Builder::new(Vec::<u8>::new());
+        let mut tar = tar::Builder::new(writer);
         for entry in read_dir(in_path)? {
             let entry_path = entry?.path();
             if entry_path.is_file() {
@@ -38,33 +44,29 @@ impl algorithm::Pack for TarGz {
             }
         }
         tar.finish()?;
-        Ok(tar.get_mut().to_vec())
+        Ok(())
     }
 
     fn decompression(
         &self,
-        compressed: &[u8],
+        reader: &mut dyn AlgorithmRead,
         out_path: &Path,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let mut tar = tar::Archive::new(compressed);
+        let mut tar = tar::Archive::new(reader);
         match tar.unpack(out_path) {
-            Ok(_) => Ok(()),
+            Ok(()) => Ok(()),
             Err(e) => {
-                let mut tar = tar::Archive::new(compressed);
-                let a = tar.entries().unwrap();
-                if a.count() == 1 {
+                if e.kind() == std::io::ErrorKind::Other {
                     remove_dir(out_path)?;
-                    Ok(write(out_path, compressed)?)
+                    let mut file = File::create(out_path)?;
+                    let reader = tar.into_inner();
+                    reader.rewind()?;
+                    copy(reader, &mut file)?;
+                    Ok(())
                 } else {
                     Err(Box::new(e))
                 }
             }
         }
-        // let a = tar.entries().unwrap();
-        // if a.count() == 1 {
-        //     Ok(write(out_path, compressed)?)
-        // } else {
-        //     Ok(tar.unpack(out_path)?)
-        // }
     }
 }

@@ -55,7 +55,7 @@ fn file_enc_salt_test() {
     let kfile = kfile();
     let crypto_alg = CbcPbkdf2::new(Some("0123456789ABCDEF".to_string()), &kfile);
 
-    let (infile, outfile) = relative_path(tag, "files/b.txt", "b.txt.enc");
+    let (infile, outfile) = relative_path(tag, "files/c.txt", "c.txt.enc");
 
     let processor = mkencbox::process::Process::new(
         Target::Enc,
@@ -66,12 +66,12 @@ fn file_enc_salt_test() {
     );
     processor.execute().unwrap();
 
-    let (e, a) = relative_path(tag, "exp_salt/b.txt.enc", "b.txt.enc");
+    let (e, a) = relative_path(tag, "exp_salt/c.txt.enc", "c.txt.enc");
     let e = read(e).unwrap();
     let a = read(a).unwrap();
     assert_eq!(e, a);
 
-    let (_, dec_out) = relative_path(tag, "", "b.txt");
+    let (_, dec_out) = relative_path(tag, "", "c.txt");
     let pack_alg = TarGz::new();
     let crypto_alg = CbcPbkdf2::new(Some("0123456789ABCDEF".to_string()), kfile);
     let processor = mkencbox::process::Process::new(
