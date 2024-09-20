@@ -1,1 +1,1 @@
-pub mod targz;
+pub mod tar;

@@ -6,21 +6,21 @@ use std::{
 
 use crate::algorithm::{self, AlgorithmRead, AlgorithmWrite};
 
-pub struct TarGz;
+pub struct Tar;
 
-impl TarGz {
+impl Tar {
     pub fn new() -> Self {
         Self
     }
 }
 
-impl Default for TarGz {
+impl Default for Tar {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl algorithm::Pack for TarGz {
+impl algorithm::Pack for Tar {
     fn compression(
         &self,
         in_path: &Path,
