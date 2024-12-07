@@ -1,5 +1,5 @@
 use clap::{Arg, Command};
-use mkencbox::process::Target;
+use mkencbox::Target;
 use std::{
     io::{BufReader, Read},
     path::PathBuf,

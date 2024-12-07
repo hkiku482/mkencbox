@@ -1,6 +1,6 @@
 use std::fs::read;
 
-use mkencbox::{crypto::cbcpbkdf2::CbcPbkdf2, pack::tar::Tar, process::Target};
+use mkencbox::{CbcPbkdf2, Process, Tar, Target};
 use test_util::{dir_entries, kfile, relative_path};
 
 mod test_util;
@@ -15,7 +15,7 @@ fn file_enc_dec_test() {
 
     let (infile, outfile) = relative_path(tag, "a.txt", "a.txt.enc");
 
-    let processor = mkencbox::process::Process::new(
+    let processor = Process::new(
         Target::Enc,
         Box::new(pack_alg),
         Box::new(crypto_alg),
@@ -31,7 +31,7 @@ fn file_enc_dec_test() {
     let (_, dec_out) = relative_path(tag, "", "a.txt");
     let pack_alg = Tar::new();
     let crypto_alg = CbcPbkdf2::new(None, kfile);
-    let processor = mkencbox::process::Process::new(
+    let processor = Process::new(
         Target::Dec,
         Box::new(pack_alg),
         Box::new(crypto_alg),
@@ -57,7 +57,7 @@ fn file_enc_salt_test() {
 
     let (infile, outfile) = relative_path(tag, "files/c.txt", "c.txt.enc");
 
-    let processor = mkencbox::process::Process::new(
+    let processor = Process::new(
         Target::Enc,
         Box::new(pack_alg),
         Box::new(crypto_alg),
@@ -74,7 +74,7 @@ fn file_enc_salt_test() {
     let (_, dec_out) = relative_path(tag, "", "c.txt");
     let pack_alg = Tar::new();
     let crypto_alg = CbcPbkdf2::new(Some("0123456789ABCDEF".to_string()), kfile);
-    let processor = mkencbox::process::Process::new(
+    let processor = Process::new(
         Target::Dec,
         Box::new(pack_alg),
         Box::new(crypto_alg),
@@ -100,7 +100,7 @@ fn directory_enc_test() {
 
     let (infile, outfile) = relative_path(tag, "dir", "dir.enc");
 
-    let processor = mkencbox::process::Process::new(
+    let processor = Process::new(
         Target::Enc,
         Box::new(pack_alg),
         Box::new(crypto_alg),
@@ -116,7 +116,7 @@ fn directory_enc_test() {
     let (_, dec_out) = relative_path(tag, "", "dir");
     let pack_alg = Tar::new();
     let crypto_alg = CbcPbkdf2::new(None, kfile);
-    let processor = mkencbox::process::Process::new(
+    let processor = Process::new(
         Target::Dec,
         Box::new(pack_alg),
         Box::new(crypto_alg),
@@ -141,7 +141,7 @@ fn directory_enc_salt_test() {
 
     let (infile, outfile) = relative_path(tag, "dir", "dir.enc");
 
-    let processor = mkencbox::process::Process::new(
+    let processor = Process::new(
         Target::Enc,
         Box::new(pack_alg),
         Box::new(crypto_alg),
@@ -153,7 +153,7 @@ fn directory_enc_salt_test() {
     let (_, dec_out) = relative_path(tag, "", "dir");
     let pack_alg = Tar::new();
     let crypto_alg = CbcPbkdf2::new(Some("0123456789ABCDEF".to_string()), kfile);
-    let processor = mkencbox::process::Process::new(
+    let processor = Process::new(
         Target::Dec,
         Box::new(pack_alg),
         Box::new(crypto_alg),

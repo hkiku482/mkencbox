@@ -1,1 +1,3 @@
-pub mod tar;
+mod tar;
+
+pub use tar::*;
