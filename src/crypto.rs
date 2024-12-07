@@ -1,6 +1,10 @@
 use crate::error::{Error, ErrorKind};
 
-pub mod cbcpbkdf2;
+mod cbcpbkdf2;
+mod chacha20;
+
+pub use cbcpbkdf2::*;
+pub use chacha20::*;
 
 pub fn key_file_phrase(kfile: &std::path::Path) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     if !kfile.is_file() {

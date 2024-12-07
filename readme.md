@@ -13,6 +13,7 @@ Arguments:
 
 Options:
   -s, --salt <SALT>  Salt
+  -m, --mode <MODE>  Encryption mode [default: cbc] [possible values: cbc, chacha20]
   -h, --help         Print help
 ```
 

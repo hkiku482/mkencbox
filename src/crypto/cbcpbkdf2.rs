@@ -17,67 +17,13 @@ use pbkdf2::pbkdf2_hmac;
 use sha2::Sha256;
 use std::{io::SeekFrom, path::PathBuf};
 
-fn cipher_enc(
-    iv: [u8; 16],
-    key: [u8; 32],
-    reader: &mut dyn AlgorithmRead,
-    writer: &mut dyn AlgorithmWrite,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let mut cipher = Encryptor::<Aes256>::new(&key.into(), &iv.into());
-    let mut buffer = [0u8; BLOCK_SIZE];
-    loop {
-        let read = reader.read(&mut buffer)?;
-        if read < BLOCK_SIZE {
-            let mut block = GenericArray::<u8, U16>::default();
-            block[..read].copy_from_slice(&buffer[..read]);
-            Pkcs7::pad(&mut block, read);
-            buffer = block.into();
-            cipher.encrypt_block_mut(GenericArray::from_mut_slice(&mut buffer));
-            writer.write_all(&buffer)?;
-            break;
-        }
-        cipher.encrypt_block_mut(GenericArray::from_mut_slice(&mut buffer));
-        writer.write_all(&buffer)?;
-    }
-    Ok(())
-}
+const ITER: u32 = 600_000;
+const BLOCK_SIZE: usize = 16;
 
-fn cipher_dec(
-    iv: [u8; 16],
-    key: [u8; 32],
-    reader: &mut dyn AlgorithmRead,
-    writer: &mut dyn AlgorithmWrite,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let mut cipher = Decryptor::<Aes256>::new(&key.into(), &iv.into());
-    let mut buffer = [0u8; BLOCK_SIZE];
-    let mut prev_buffer = Option::<[u8; BLOCK_SIZE]>::None;
-
-    loop {
-        let read = reader.read(&mut buffer)?;
-        cipher.decrypt_block_mut(GenericArray::from_mut_slice(&mut buffer));
-        if let Some(prev) = prev_buffer {
-            if read == 0 {
-                let block = GenericArray::<u8, U16>::from(prev);
-                let unpadded = match Pkcs7::unpad(&block) {
-                    Ok(v) => v,
-                    Err(_) => &prev,
-                };
-                writer.write_all(unpadded)?;
-                break;
-            }
-            writer.write_all(&prev)?;
-        }
-        prev_buffer = Some(buffer);
-    }
-    Ok(())
-}
 pub struct CbcPbkdf2 {
     salt: Option<String>,
     key_filepath: PathBuf,
 }
-
-const ITER: u32 = 600_000;
-const BLOCK_SIZE: usize = 16;
 
 impl CbcPbkdf2 {
     pub fn new(salt: Option<String>, key_filepath: impl Into<PathBuf>) -> Self {
@@ -155,6 +101,62 @@ impl Crypto for CbcPbkdf2 {
     }
 }
 
+#[inline]
+fn cipher_enc(
+    iv: [u8; 16],
+    key: [u8; 32],
+    reader: &mut dyn AlgorithmRead,
+    writer: &mut dyn AlgorithmWrite,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut cipher = Encryptor::<Aes256>::new(&key.into(), &iv.into());
+    let mut buffer = [0u8; BLOCK_SIZE];
+    loop {
+        let read = reader.read(&mut buffer)?;
+        if read < BLOCK_SIZE {
+            let mut block = GenericArray::<u8, U16>::default();
+            block[..read].copy_from_slice(&buffer[..read]);
+            Pkcs7::pad(&mut block, read);
+            buffer = block.into();
+            cipher.encrypt_block_mut(GenericArray::from_mut_slice(&mut buffer));
+            writer.write_all(&buffer)?;
+            break;
+        }
+        cipher.encrypt_block_mut(GenericArray::from_mut_slice(&mut buffer));
+        writer.write_all(&buffer)?;
+    }
+    Ok(())
+}
+
+#[inline]
+fn cipher_dec(
+    iv: [u8; 16],
+    key: [u8; 32],
+    reader: &mut dyn AlgorithmRead,
+    writer: &mut dyn AlgorithmWrite,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut cipher = Decryptor::<Aes256>::new(&key.into(), &iv.into());
+    let mut buffer = [0u8; BLOCK_SIZE];
+    let mut prev_buffer = Option::<[u8; BLOCK_SIZE]>::None;
+
+    loop {
+        let read = reader.read(&mut buffer)?;
+        cipher.decrypt_block_mut(GenericArray::from_mut_slice(&mut buffer));
+        if let Some(prev) = prev_buffer {
+            if read == 0 {
+                let block = GenericArray::<u8, U16>::from(prev);
+                let unpadded = match Pkcs7::unpad(&block) {
+                    Ok(v) => v,
+                    Err(_) => &prev,
+                };
+                writer.write_all(unpadded)?;
+                break;
+            }
+            writer.write_all(&prev)?;
+        }
+        prev_buffer = Some(buffer);
+    }
+    Ok(())
+}
 #[cfg(test)]
 mod test {
     use super::cipher_enc;

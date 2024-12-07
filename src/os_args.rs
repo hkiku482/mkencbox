@@ -1,10 +1,12 @@
 use clap::{Arg, Command};
-use mkencbox::process::Target;
+use mkencbox::Target;
 use std::{
     io::{BufReader, Read},
     path::PathBuf,
     process::exit,
 };
+
+use crate::mode::Mode;
 
 #[derive(Debug)]
 pub struct OsArgs {
@@ -13,6 +15,7 @@ pub struct OsArgs {
     pub key_file: PathBuf,
     pub input: PathBuf,
     pub output: PathBuf,
+    pub mode: Mode,
 }
 
 const APP_NAME: &str = "mkencbox";
@@ -24,6 +27,7 @@ impl OsArgs {
         const ID_KEY_FILE: &str = "KEY_FILE";
         const ID_INFILE: &str = "INPUT";
         const ID_OUTFILE: &str = "OUTPUT";
+        const ID_MODE: &str = "MODE";
 
         let command = Command::new(APP_NAME)
             .arg(
@@ -32,6 +36,14 @@ impl OsArgs {
                     .required(false)
                     .long("salt")
                     .short('s'),
+            )
+            .arg(
+                Arg::new(ID_MODE)
+                    .help("Encryption mode")
+                    .long("mode")
+                    .short('m')
+                    .value_parser(["cbc", "chacha20"])
+                    .default_value("cbc"),
             )
             .arg(
                 Arg::new(ID_PROCESS)
@@ -113,12 +125,19 @@ impl OsArgs {
             },
         };
 
+        let mode = command.get_one::<String>(ID_MODE).unwrap().as_str();
+        let mode = match mode {
+            "chacha20" => Mode::Chacha,
+            _ => Mode::Cbc,
+        };
+
         OsArgs {
             salt,
             process,
             key_file: PathBuf::from(key_file),
             input: input_file,
             output: output_file,
+            mode,
         }
     }
 }
