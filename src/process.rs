@@ -70,7 +70,9 @@ impl Process {
         self.pack_algorithm
             .compression(self.from_path.as_path(), &mut tmp)?;
         tmp.rewind()?;
+        println!("packed");
         self.crypto_algorithm.encrypt(&mut tmp, &mut dst)?;
+        println!("encrypted");
         Ok(())
     }
 
@@ -80,12 +82,13 @@ impl Process {
 
         let mut buf = Vec::new();
         src.read_to_end(&mut buf)?;
-        println!("{:02X?}", buf);
         src.rewind()?;
 
         self.crypto_algorithm.decrypt(&mut src, &mut tmp)?;
         tmp.rewind()?;
+        println!("decrypted");
         self.pack_algorithm.decompression(&mut tmp, &self.to_path)?;
+        println!("unpacked");
         Ok(())
     }
 }
