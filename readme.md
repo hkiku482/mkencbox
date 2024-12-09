@@ -1,20 +1,23 @@
 ## mkencbox
 
+Key file based encryptor for file or directory tree.
+
 ### Usage
 
 ```
 Usage: mkencbox [OPTIONS] <PROCESS> <KEY_FILE> <INPUT> [OUTPUT]
 
 Arguments:
-  <PROCESS>   Execution. `auto` decrypt requires salt at the beginning of the input [possible values: enc, dec, auto]
+  <PROCESS>   Encrypt or decrypt process [possible values: enc, dec]
   <KEY_FILE>  Key file path
   <INPUT>     Input name
   [OUTPUT]    Output name
 
 Options:
   -s, --salt <SALT>  Salt
-  -m, --mode <MODE>  Encryption mode [default: cbc] [possible values: cbc, chacha20]
+  -m, --mode <MODE>  Encryption algorithm [default: chacha20] [possible values: cbc, chacha20]
   -h, --help         Print help
+  -V, --version      Print version
 ```
 
 ### The following 2 have the same behavior.

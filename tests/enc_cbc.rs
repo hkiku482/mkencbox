@@ -1,14 +1,14 @@
 use std::fs::read;
 
+use common::{dir_entries, kfile, prepare, relative_path};
 use mkencbox::{CbcPbkdf2, Process, Tar, Target};
-use test_util::{dir_entries, kfile, relative_path};
 
-mod test_util;
+mod common;
 
 #[test]
 fn file_enc_dec_test() {
     let tag = "file_enc_dec_test";
-    test_util::prepare(tag);
+    prepare(tag);
     let kfile = kfile();
     let pack_alg = Tar::new();
     let crypto_alg = CbcPbkdf2::new(None, &kfile);
@@ -50,7 +50,7 @@ fn file_enc_dec_test() {
 #[test]
 fn file_enc_salt_test() {
     let tag = "file_enc_salt_test";
-    test_util::prepare(tag);
+    prepare(tag);
     let pack_alg = Tar::new();
     let kfile = kfile();
     let crypto_alg = CbcPbkdf2::new(Some("0123456789ABCDEF".to_string()), &kfile);
@@ -93,7 +93,7 @@ fn file_enc_salt_test() {
 #[test]
 fn directory_enc_test() {
     let tag = "directory_enc_test";
-    test_util::prepare(tag);
+    prepare(tag);
     let pack_alg = Tar::new();
     let kfile = kfile();
     let crypto_alg = CbcPbkdf2::new(None, &kfile);
@@ -134,7 +134,7 @@ fn directory_enc_test() {
 #[test]
 fn directory_enc_salt_test() {
     let tag = "directory_enc_salt_test";
-    test_util::prepare(tag);
+    prepare(tag);
     let pack_alg = Tar::new();
     let kfile = kfile();
     let crypto_alg = CbcPbkdf2::new(Some("0123456789ABCDEF".to_string()), &kfile);

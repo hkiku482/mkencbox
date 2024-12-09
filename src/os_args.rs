@@ -1,4 +1,4 @@
-use clap::{Arg, Command};
+use clap::{crate_version, Arg, Command};
 use mkencbox::Target;
 use std::{
     io::{BufReader, Read},
@@ -30,6 +30,8 @@ impl OsArgs {
         const ID_MODE: &str = "MODE";
 
         let command = Command::new(APP_NAME)
+            .version(crate_version!())
+            .about("Key file based encryptor for file or directory tree.")
             .arg(
                 Arg::new(ID_SALT)
                     .help("Salt")
@@ -39,17 +41,17 @@ impl OsArgs {
             )
             .arg(
                 Arg::new(ID_MODE)
-                    .help("Encryption mode")
+                    .help("Encryption algorithm")
                     .long("mode")
                     .short('m')
                     .value_parser(["cbc", "chacha20"])
-                    .default_value("cbc"),
+                    .default_value("chacha20"),
             )
             .arg(
                 Arg::new(ID_PROCESS)
-                    .help("Execution. `auto` decrypt requires salt at the beginning of the input")
+                    .help("Encrypt or decrypt process")
                     .required(true)
-                    .value_parser(["enc", "dec", "auto"]),
+                    .value_parser(["enc", "dec"]),
             )
             .arg(Arg::new(ID_KEY_FILE).help("Key file path").required(true))
             .arg(Arg::new(ID_INFILE).help("Input name").required(true))

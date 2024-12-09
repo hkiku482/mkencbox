@@ -44,6 +44,7 @@ pub fn kfile() -> PathBuf {
     kfile
 }
 
+#[allow(dead_code)]
 pub fn dir_entries(base: PathBuf) -> Vec<String> {
     let mut entries = Vec::new();
     for e in WalkDir::new(&base).into_iter().filter_map(|e| e.ok()) {
