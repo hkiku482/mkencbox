@@ -111,18 +111,10 @@ impl OsArgs {
                 }
                 Target::Dec => {
                     let mut s = input_file.clone();
-                    match s.extension() {
-                        Some(_) => {
-                            let mut parent = s.parent().unwrap().to_path_buf();
-                            let s = s.file_stem().unwrap();
-                            parent.push(s);
-                            parent
-                        }
-                        None => {
-                            s.set_extension("dec");
-                            s
-                        }
-                    }
+                    let mut path_str = s.to_str().unwrap().to_string();
+                    path_str.push_str(".dec");
+                    s = PathBuf::from(path_str);
+                    s
                 }
             },
         };
