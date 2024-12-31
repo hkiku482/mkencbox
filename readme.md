@@ -27,13 +27,23 @@ openssl enc -e -aes-256-cbc -pbkdf2 -iter 600000 -pass pass:$(sha256sum KFILE | 
 ```
 
 ```
-./mkencbox -s "0123456789ABCDEF" enc KFILE INPUT OUTPUT
+./mkencbox -m cbc -s "0123456789ABCDEF" enc KFILE INPUT OUTPUT
 ```
 
 ### General use
 
 ```
 ./mkencbox enc KFILE INPUT OUTPUT
+```
+
+### Tips
+
+#### en/decrypt huge file
+
+`/tmp` directory size may be limited by your OS.
+
+```
+EXPORT=TMPDIR=/not/ramdisk
 ```
 
 ### More info
