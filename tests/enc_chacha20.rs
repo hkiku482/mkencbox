@@ -38,7 +38,7 @@ fn test_chacha() {
     let plain = read(&infile).unwrap();
     let encrypted = read(&outfile).unwrap();
     let decrypted = read(&decfile).unwrap();
-    assert_ne!(plain, encrypted);
+    assert_eq!(vec![250, 62, 4, 190, 89], encrypted);
     assert_eq!(plain, decrypted);
 
     // with salt
@@ -71,6 +71,6 @@ fn test_chacha() {
     let salt_encrypted = read(&outfile).unwrap();
     let salt_decrypted = read(&decfile).unwrap();
     assert_ne!(encrypted, salt_encrypted);
-    assert_ne!(plain, salt_encrypted);
+    assert_eq!(vec![229, 25, 140, 139, 136], salt_encrypted);
     assert_eq!(plain, salt_decrypted);
 }

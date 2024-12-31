@@ -4,7 +4,9 @@ use std::{
 };
 
 pub trait AlgorithmRead: Read + Seek {}
+impl<T: Read + Seek> AlgorithmRead for T {}
 pub trait AlgorithmWrite: Write + Seek {}
+impl<T: Write + Seek> AlgorithmWrite for T {}
 
 pub trait Crypto {
     fn encrypt(
