@@ -43,7 +43,7 @@ openssl enc -e -aes-256-cbc -pbkdf2 -iter 600000 -pass pass:$(sha256sum KFILE | 
 `/tmp` directory size may be limited by your OS.
 
 ```
-EXPORT=TMPDIR=/not/ramdisk
+export TMPDIR=/not/ramdisk
 ```
 
 ### More info
