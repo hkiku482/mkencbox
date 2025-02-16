@@ -15,19 +15,9 @@ Arguments:
 
 Options:
   -s, --salt <SALT>  Salt
-  -m, --mode <MODE>  Encryption algorithm [default: chacha20] [possible values: cbc, chacha20]
+      --progress     Show progress
   -h, --help         Print help
   -V, --version      Print version
-```
-
-### The following 2 have the same behavior.
-
-```
-openssl enc -e -aes-256-cbc -pbkdf2 -iter 600000 -pass pass:$(sha256sum KFILE | awk '{print $1}')0$(md5sum KFILE | awk '{print $1}') -S "0123456789ABCDEF" -in INPUT -out OUTPUT
-```
-
-```
-./mkencbox -m cbc -s "0123456789ABCDEF" enc KFILE INPUT OUTPUT
 ```
 
 ### General use

@@ -4,8 +4,8 @@ use std::fs::read;
 
 mod common;
 
-#[test]
-fn test_chacha() {
+#[tokio::test]
+async fn test_chacha() {
     let tag = "test_chacha";
     prepare(tag);
     let kfile = kfile();
@@ -21,7 +21,7 @@ fn test_chacha() {
         &infile,
         &outfile,
     );
-    processor.execute().unwrap();
+    processor.execute().await.unwrap();
 
     let (_, decfile) = relative_path(tag, "", "a.txt.dec");
     let pack_alg = Tar::new();
@@ -33,7 +33,7 @@ fn test_chacha() {
         &outfile,
         &decfile,
     );
-    processor.execute().unwrap();
+    processor.execute().await.unwrap();
 
     let plain = read(&infile).unwrap();
     let encrypted = read(&outfile).unwrap();
@@ -54,7 +54,7 @@ fn test_chacha() {
         infile,
         &outfile,
     );
-    processor.execute().unwrap();
+    processor.execute().await.unwrap();
 
     let (_, decfile) = relative_path(tag, "", "a.txt.salt.dec");
     let pack_alg = Tar::new();
@@ -66,7 +66,7 @@ fn test_chacha() {
         &outfile,
         &decfile,
     );
-    processor.execute().unwrap();
+    processor.execute().await.unwrap();
 
     let salt_encrypted = read(&outfile).unwrap();
     let salt_decrypted = read(&decfile).unwrap();
