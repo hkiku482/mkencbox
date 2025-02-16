@@ -193,7 +193,7 @@ impl Process {
                     break;
                 }
 
-                let progress = ((curr as f64 / need as f64) * u8::MAX as f64).round() as u8;
+                let progress = ((curr / need) * u8::MAX as f64).round() as u8;
                 let progress = progress / 2;
 
                 tx.send(progress).await.unwrap();
@@ -215,7 +215,7 @@ impl Process {
                     break;
                 }
 
-                let progress = ((curr as f64 / need as f64) * u8::MAX as f64).round() as u8;
+                let progress = ((curr / need) * u8::MAX as f64).round() as u8;
                 let progress = u8::MAX / 2 + progress / 2;
 
                 tx.send(progress.clamp(u8::MAX / 2, u8::MAX)).await.unwrap();
