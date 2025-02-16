@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use aes::cipher::{KeyIvInit, StreamCipher};
+use anyhow::Result;
 use pbkdf2::pbkdf2_hmac;
 use sha2::Sha256;
 
@@ -26,7 +27,7 @@ impl Chacha20 {
         &self,
         reader: &mut dyn crate::AlgorithmRead,
         writer: &mut dyn crate::AlgorithmWrite,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<()> {
         let pass = key_file_phrase(&self.key_filepath)?;
         let salt = match &self.salt {
             Some(v) => v.as_bytes().to_vec(),
@@ -57,7 +58,7 @@ impl Crypto for Chacha20 {
         &self,
         reader: &mut dyn crate::AlgorithmRead,
         writer: &mut dyn crate::AlgorithmWrite,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<()> {
         self.process_contrast(reader, writer)
     }
 
@@ -65,7 +66,7 @@ impl Crypto for Chacha20 {
         &self,
         reader: &mut dyn crate::AlgorithmRead,
         writer: &mut dyn crate::AlgorithmWrite,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<()> {
         self.process_contrast(reader, writer)
     }
 }

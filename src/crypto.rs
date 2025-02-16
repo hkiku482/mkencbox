@@ -1,14 +1,13 @@
 use crate::error::{Error, ErrorKind};
 
-mod cbcpbkdf2;
 mod chacha20;
 
-pub use cbcpbkdf2::*;
+use anyhow::Result;
 pub use chacha20::*;
 
-pub fn key_file_phrase(kfile: &std::path::Path) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+pub fn key_file_phrase(kfile: &std::path::Path) -> Result<Vec<u8>> {
     if !kfile.is_file() {
-        return Err(Box::new(Error::from(ErrorKind::InvalidKeyfile)));
+        return Err(Box::new(Error::from(ErrorKind::InvalidKeyfile)).into());
     }
     let bytes = std::fs::read(kfile)?;
     let sha256sum = sha256::digest(&bytes);

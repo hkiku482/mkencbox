@@ -3,33 +3,27 @@ use std::{
     path::Path,
 };
 
+use anyhow::Result;
+
 pub trait AlgorithmRead: Read + Seek {}
 impl<T: Read + Seek> AlgorithmRead for T {}
 pub trait AlgorithmWrite: Write + Seek {}
 impl<T: Write + Seek> AlgorithmWrite for T {}
 
-pub trait Crypto {
+pub trait Crypto: Send + Sync {
     fn encrypt(
         &self,
         reader: &mut dyn AlgorithmRead,
         writer: &mut dyn AlgorithmWrite,
-    ) -> Result<(), Box<dyn std::error::Error>>;
+    ) -> Result<()>;
     fn decrypt(
         &self,
         reader: &mut dyn AlgorithmRead,
         writer: &mut dyn AlgorithmWrite,
-    ) -> Result<(), Box<dyn std::error::Error>>;
+    ) -> Result<()>;
 }
 
-pub trait Pack {
-    fn compression(
-        &self,
-        in_path: &Path,
-        writer: &mut dyn AlgorithmWrite,
-    ) -> Result<(), Box<dyn std::error::Error>>;
-    fn decompression(
-        &self,
-        reader: &mut dyn AlgorithmRead,
-        out_path: &Path,
-    ) -> Result<(), Box<dyn std::error::Error>>;
+pub trait Pack: Send + Sync {
+    fn compression(&self, in_path: &Path, writer: &mut dyn AlgorithmWrite) -> Result<()>;
+    fn decompression(&self, reader: &mut dyn AlgorithmRead, out_path: &Path) -> Result<()>;
 }

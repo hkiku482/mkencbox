@@ -1,12 +1,10 @@
-use clap::{crate_version, Arg, Command};
+use clap::{crate_version, Arg, ArgAction, Command};
 use mkencbox::Target;
 use std::{
     io::{BufReader, Read},
     path::PathBuf,
     process::exit,
 };
-
-use crate::mode::Mode;
 
 #[derive(Debug)]
 pub struct OsArgs {
@@ -15,7 +13,7 @@ pub struct OsArgs {
     pub key_file: PathBuf,
     pub input: PathBuf,
     pub output: PathBuf,
-    pub mode: Mode,
+    pub progress: bool,
 }
 
 const APP_NAME: &str = "mkencbox";
@@ -27,7 +25,7 @@ impl OsArgs {
         const ID_KEY_FILE: &str = "KEY_FILE";
         const ID_INFILE: &str = "INPUT";
         const ID_OUTFILE: &str = "OUTPUT";
-        const ID_MODE: &str = "MODE";
+        const ID_PROGRESS: &str = "PROGRESS";
 
         let command = Command::new(APP_NAME)
             .version(crate_version!())
@@ -40,12 +38,10 @@ impl OsArgs {
                     .short('s'),
             )
             .arg(
-                Arg::new(ID_MODE)
-                    .help("Encryption algorithm")
-                    .long("mode")
-                    .short('m')
-                    .value_parser(["cbc", "chacha20"])
-                    .default_value("chacha20"),
+                Arg::new(ID_PROGRESS)
+                    .help("Show progress")
+                    .long("progress")
+                    .action(ArgAction::SetTrue),
             )
             .arg(
                 Arg::new(ID_PROCESS)
@@ -104,14 +100,16 @@ impl OsArgs {
             None => match process {
                 Target::Enc => {
                     let mut s = input_file.clone();
-                    let mut path_str = s.to_str().unwrap().to_string();
+                    let path_str = s.to_str().unwrap();
+                    let mut path_str = path_str.trim_end_matches("/").to_string();
                     path_str.push_str(".enc");
                     s = PathBuf::from(path_str);
                     s
                 }
                 Target::Dec => {
                     let mut s = input_file.clone();
-                    let mut path_str = s.to_str().unwrap().to_string();
+                    let path_str = s.to_str().unwrap();
+                    let mut path_str = path_str.trim_end_matches("/").to_string();
                     path_str.push_str(".dec");
                     s = PathBuf::from(path_str);
                     s
@@ -119,11 +117,7 @@ impl OsArgs {
             },
         };
 
-        let mode = command.get_one::<String>(ID_MODE).unwrap().as_str();
-        let mode = match mode {
-            "chacha20" => Mode::Chacha,
-            _ => Mode::Cbc,
-        };
+        let progress = command.get_flag(ID_PROGRESS);
 
         OsArgs {
             salt,
@@ -131,7 +125,7 @@ impl OsArgs {
             key_file: PathBuf::from(key_file),
             input: input_file,
             output: output_file,
-            mode,
+            progress,
         }
     }
 }
